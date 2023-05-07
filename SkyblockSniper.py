@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from timeit import default_timer
 import time
 
-import rich
+from rich.console import print
 
 import pandas as pd
 import requests
