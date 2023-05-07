@@ -134,7 +134,6 @@ def main():
             profit = (result[1]-result[0][2])
             print(str(result[0][0]) + " | [cyan]Name: " + str(result[0][1]) + "[/cyan] | [yellow]Item price: {:,}".format(result[0][2]) + " | [red]Second lowest BIN: {:,}".format(result[1]), " | [green]Profit: {:,}".format(profit) + "[/green]")
             profit = 0
-        print("\nLooking for auctions...")
 
 print("Looking for auctions...")
 main()
