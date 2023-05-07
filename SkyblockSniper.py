@@ -7,6 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from timeit import default_timer
 import time
 
+import rich
+
 import pandas as pd
 import requests
 
@@ -129,7 +131,9 @@ def main():
         done = default_timer() - START_TIME
         if op: winsound.Beep(500, 500) # emits a frequency 500hz, for 500ms
         for result in results:
-            print("Auction UUID: " + str(result[0][0]) + " | Item Name: " + str(result[0][1]) + " | Item price: {:,}".format(result[0][2]), " | Second lowest BIN: {:,}".format(result[1]) + " | Time to refresh AH: " + str(round(done, 2)))
+            profit = (result[1]-result[0][2])
+            print(str(result[0][0]) + " | Name: " + str(result[0][1]) + " | [yellow]Item price: {:,}".format(result[0][2]), " | [red]Second lowest BIN: {:,}".format(result[1]), " | [green]Profit: {:,}".format(profit) + "[/green]")
+            profit = 0
         print("\nLooking for auctions...")
 
 print("Looking for auctions...")
