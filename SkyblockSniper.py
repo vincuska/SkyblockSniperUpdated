@@ -132,7 +132,7 @@ def main():
         if op: winsound.Beep(500, 500) # emits a frequency 500hz, for 500ms
         for result in results:
             profit = (result[1]-result[0][2])
-            print(str(result[0][0]) + " | [cyan]Name: " + str(result[0][1]) + "[/cyan] | [yellow]Item price: {:,}".format(result[0][2]) + "[/yellow] | [red]Second lowest BIN: {:,}".format(result[1]), "[/red] | [green]Profit: {:,}".format(profit) + "[/green]")
+            print(str(result[0][0]) + " | [cyan]Name: " + str(result[0][1]) + "[/cyan] | [yellow]Item price: {:,}".format(result[0][2]) + "[/yellow] | [red]Second lowest BIN: {:,}".format(result[1]), " | [green]Profit: {:,}".format(profit) + "[/green]")
             profit = 0
 
 print("Looking for auctions...")
