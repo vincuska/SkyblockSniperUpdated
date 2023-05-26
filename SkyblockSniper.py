@@ -37,7 +37,7 @@ REFORGES = [
     "Coldfused ", "Supreme ", "Double-Bit ", "Green Thumb ", "Unyielding ","Lumberjacks's ", "Peasant's ",
     "Prospector's ", "Great", "Rugged ", "Lush ", "Robust ", "Zooming ", "Excellent ", "Sturdy ",
     "Fortunate ", "Glistening ", "Strengthened ", "Waxed ", "Fortified ", "Chomp ", "Pitchin'", "Salty ",
-    "Treacherous ", "Rooted ", "Blooming ", "Earthy ", "Bustling ", "Mossy ", "Festive ", "Snowy "]
+    "Treacherous ", "Rooted ", "Blooming ", "Earthy ", "Bustling ", "Mossy ", "Festive ", "Snowy ", "Thicc "]
 
 # Constant for the lowest priced item you want to be shown to you; feel free to change this
 LOWEST_PRICE = 5
