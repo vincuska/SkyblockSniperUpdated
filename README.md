@@ -4,15 +4,8 @@ Basically updated it but he didn't accept the changes so I cloned it and here it
 
 # SkyblockSniper
 
-## Check out my bazaar flipping website, https://skyblock.bz
-
-### I'm not going to respond to issues asking for basic, Google-able troubleshooting questions anymore. If you have one such issue, Google the error.
-
-### This is a BIN sniper bot I made in like 2 hours because all the BIN sniping people seem annoying
-Presumably it's pretty badly made since I wasn't getting the "200 mil per hour" figures that the YouTubers kept spouting so feel free to submit pull requests
-
 ## How to use:
-[Here's a video some dude made that shows the process fairly well](https://youtu.be/ojzcvRCDqJ0)
+
 ### Step 1
 Download Python 3.7.8. There's literally thousands of guides on how to do this so I'll assume you can figure it out yourself.
 
