@@ -1,6 +1,4 @@
 # A updated version of [SkyblockSniper](https://github.com/csjh/SkyblockSniper) by [csjh](https://github.com/csjh)
-Basically updated it but he didn't accept the changes so I cloned it and here it is :) 
-# 
 
 # SkyblockSniper
 
