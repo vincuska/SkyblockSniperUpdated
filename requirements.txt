@@ -1,4 +1,5 @@
-requests==2.25.1
-pandas==1.3.2
-plyer==2.0.0
+requests
+pandas
+plyer
+
 rich
