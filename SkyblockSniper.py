@@ -1,18 +1,18 @@
 import asyncio
 import re
 import os
-op = os.name == 'nt'
-if op: import winsound
 from concurrent.futures import ThreadPoolExecutor
 from timeit import default_timer
 import time
 
 from rich import print
+from rich.console import Console
 
-import pandas as pd
 import requests
 
 from plyer import notification
+
+console = Console()
 
 c = requests.get("https://api.hypixel.net/skyblock/auctions?page=0")
 resp = c.json()
@@ -21,8 +21,8 @@ toppage = resp['totalPages']
 
 results = []
 prices = {}
+all_results = []
 
-# stuff to remove
 REFORGES = [
     " ✦", "⚚ ", " ✪", "✪", "Stiff ", "Lucky ", "Jerry's ", "Dirty ", "Fabled ", "Suspicious ", "Gilded ", "Warped ",
     "Withered ", "Bulky ", "Stellar ", "Heated ", "Ambered ", "Fruitful ", "Magnetic ", "Fleet ", "Mithraic ", "Auspicious ",
@@ -32,22 +32,18 @@ REFORGES = [
     "Fair ", "Epic ", "Sharp ", "Heroic ", "Spicy ", "Legendary ", "Deadly ", "Fine ", "Grand ", "Hasty ", "Neat ", "Rapid ",
     "Unreal ", "Awkward ", "Rich ", "Clean ", "Fierce ", "Heavy ", "Light ", "Mythic ", "Pure ", "Smart ", "Titanic ", "Wise ",
     "Bizarre ", "Itchy ", "Ominous ", "Pleasant ", "Pretty ", "Shiny ", "Simple ", "Strange ", "Vivid ", "Godly ", "Demonic ",
-    "Forceful ", "Hurtful ", "Keen ", "Strong ", "Superior ", "Unpleasant ", "Zealous ", "Hyper ", # hyper was missing from the old ones
-    # <-- old ones | new ones -->
+    "Forceful ", "Hurtful ", "Keen ", "Strong ", "Superior ", "Unpleasant ", "Zealous ", "Hyper ",
     "Coldfused ", "Supreme ", "Double-Bit ", "Green Thumb ", "Unyielding ","Lumberjacks's ", "Peasant's ",
     "Prospector's ", "Great", "Rugged ", "Lush ", "Robust ", "Zooming ", "Excellent ", "Sturdy ",
     "Fortunate ", "Glistening ", "Strengthened ", "Waxed ", "Fortified ", "Chomp ", "Pitchin'", "Salty ",
     "Treacherous ", "Rooted ", "Blooming ", "Earthy ", "Bustling ", "Mossy ", "Festive ", "Snowy ", "Thicc ",
-    "Fanged ", "Blood-Soaked ", "Greater Spook ", "Beady ", "Buzzing ", "Glacial ", "Lustrous "]
+    "Fanged ", "Blood-Soaked ", "Greater Spook ", "Beady ", "Buzzing ", "Glacial ", "Lustrous ", "Royal ", "Dimensional ",
+    "Blazing ", "Scraped "]
 
-# Constant for the lowest priced item you want to be shown to you; feel free to change this
 LOWEST_PRICE = 5
-
-# Constant to turn on/off desktop notifications
 NOTIFY = False
-
-# Constant for the lowest percent difference you want to be shown to you; feel free to change this
 LOWEST_PERCENT_MARGIN = 1/2
+MIN_PROFIT = 100000  # Minimum profit threshold - change this value as needed
 
 START_TIME = default_timer()
 
@@ -55,35 +51,29 @@ def fetch(session, page):
     global toppage
     base_url = "https://api.hypixel.net/skyblock/auctions?page="
     with session.get(base_url + page) as response:
-        # puts response in a dict
         data = response.json()
         toppage = data['totalPages']
         if data['success']:
             toppage = data['totalPages']
             for auction in data['auctions']:
-                if not auction['claimed'] and auction['bin'] == True and not "Furniture" in auction["item_lore"]: # if the auction isn't a) claimed and is b) BIN
-                    # removes level if it's a pet, also 
-                    index = re.sub("\[[^\]]*\]", "", auction['item_name']) + auction['tier']
-                    # removes reforges and other yucky characters
+                if not auction['claimed'] and auction['bin'] == True and not "Furniture" in auction["item_lore"]:
+                    index = re.sub(r"\[[^\]]*\]", "", auction['item_name']) + auction['tier']
                     for reforge in REFORGES: index = index.replace(reforge, "")
-                    # if the current item already has a price in the prices map, the price is updated
                     if index in prices:
                         if prices[index][0] > auction['starting_bid']:
                             prices[index][1] = prices[index][0]
                             prices[index][0] = auction['starting_bid']
                         elif prices[index][1] > auction['starting_bid']:
                             prices[index][1] = auction['starting_bid']
-                    # otherwise, it's added to the prices map
                     else:
                         prices[index] = [auction['starting_bid'], float("inf")]
                         
-                    # if the auction fits in some parameters
                     if prices[index][1] > LOWEST_PRICE and prices[index][0]/prices[index][1] < LOWEST_PERCENT_MARGIN and auction['start']+60000 > now:
-                        results.append([auction['uuid'], auction['item_name'], auction['starting_bid'], index])
+                        result_data = [auction['uuid'], auction['item_name'], auction['starting_bid'], index, prices[index][1]]
+                        results.append(result_data)
         return data
 
 async def get_data_asynchronous():
-    # puts all the page strings
     pages = [str(x) for x in range(toppage)]
     with ThreadPoolExecutor(max_workers=10) as executor:
         with requests.Session() as session:
@@ -93,16 +83,14 @@ async def get_data_asynchronous():
                 loop.run_in_executor(
                     executor,
                     fetch,
-                    *(session, page) # Allows us to pass in multiple arguments to `fetch`
+                    *(session, page)
                 )
-                # runs for every page
                 for page in pages if int(page) < toppage
             ]
             for response in await asyncio.gather(*tasks):
                 pass
 
 def main():
-    # Resets variables
     global results, prices, START_TIME
     START_TIME = default_timer()
     results = []
@@ -113,11 +101,19 @@ def main():
     future = asyncio.ensure_future(get_data_asynchronous())
     loop.run_until_complete(future)
     
-    # Makes sure all the results are still up to date
     if len(results): results = [[entry, prices[entry[3]][1]] for entry in results if (entry[2] > LOWEST_PRICE and prices[entry[3]][1] != float('inf') and prices[entry[3]][0] == entry[2] and prices[entry[3]][0]/prices[entry[3]][1] < LOWEST_PERCENT_MARGIN)]
     
-    if len(results): # if there's results to print
-
+    # Filter results by minimum profit
+    if len(results):
+        profitable_results = []
+        for result in results:
+            profit = (result[1] - result[0][2])
+            if profit >= MIN_PROFIT:
+                profitable_results.append(result)
+        
+        results = profitable_results
+    
+    if len(results):
         if NOTIFY: 
             notification.notify(
                 title = max(results, key=lambda entry:entry[1])[0][1],
@@ -126,23 +122,27 @@ def main():
                 timeout = 4,
             )
         
-        df=pd.DataFrame(['/viewauction ' + str(max(results, key=lambda entry:entry[1])[0][0])])
-        df.to_clipboard(index=False,header=False) # copies most valuable auction to clipboard (usually just the only auction cuz very uncommon for there to be multiple
+
         
         done = default_timer() - START_TIME
-        if op: winsound.Beep(500, 500) # emits a frequency 500hz, for 500ms
+        
+        print("UUID\t\t\t\t\tName\t\t\t\tPrice\t\t2nd Price\tProfit")
+        print("-" * 120)
+        
         for result in results:
             profit = (result[1]-result[0][2])
-            print(str(result[0][0]) + " | [cyan]Name: " + str(result[0][1]) + "[/cyan] | [yellow]Item price: {:,}".format(result[0][2]) + "[/yellow] | [red]Second lowest BIN: {:,}".format(result[1]), " | [green]Profit: {:,}".format(profit) + "[/green]")
-            profit = 0
+            uuid_short = str(result[0][0])[:32]
+            name = str(result[0][1])[:30]
+            item_price = f"{result[0][2]:,}"
+            second_lowest = f"{result[1]:,}"
+            profit_str = f"{profit:,}"
+            
+            print(f"{uuid_short}\t{name:<30}\t{item_price:<12}\t{second_lowest:<12}\t[green]{profit_str}[/green]")
 
-print("Looking for auctions...")
 main()
 
 def dostuff():
     global now, toppage
-
-    # if 60 seconds have passed since the last update
     if time.time()*1000 > now + 60000:
         prevnow = now
         now = float('inf')
